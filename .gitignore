@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files (SENSITIVE - never commit!)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Wallet/Key files (SENSITIVE - never commit!)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+test-wallet.json
+wallet.json
+keypair.json
+*.pem
+*.key
+
+# Cache
+cache/
+.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test output
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

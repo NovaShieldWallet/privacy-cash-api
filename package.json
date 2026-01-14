@@ -1,0 +1,50 @@
+{
+  "name": "nova-private-cash-api",
+  "version": "1.0.0",
+  "description": "Secure API wrapper for Privacy Cash SDK - keys never leave client",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test:health": "tsx scripts/test-health.ts",
+    "test:api-full": "tsx scripts/test-api-full.ts",
+    "test:api": "tsx scripts/test-api.ts",
+    "validate": "tsx scripts/validate-setup.ts",
+    "sdk:test": "tsx scripts/sdk-test.ts",
+    "sdk:balance": "tsx scripts/sdk-balance.ts",
+    "sdk:deposit": "tsx scripts/sdk-deposit.ts",
+    "sdk:withdraw": "tsx scripts/sdk-withdraw.ts",
+    "e2e:full": "tsx scripts/e2e-full-test.ts",
+    "test:sol-ore": "tsx scripts/test-sol-ore.ts"
+  },
+  "dependencies": {
+    "@lightprotocol/hasher.rs": "^0.2.1",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.2",
+    "bs58": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "helmet": "^8.0.0",
+    "snarkjs": "^0.7.5",
+    "tweetnacl": "^1.0.3",
+    "ffjavascript": "^0.3.1",
+    "ethers": "^6.15.0",
+    "@ethersproject/keccak256": "^5.8.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "@types/snarkjs": "^0.7.9",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
