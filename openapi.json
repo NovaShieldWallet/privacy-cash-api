@@ -1,0 +1,743 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Privacy Cash API",
+    "description": "Secure API for Privacy Cash iOS client. Private keys never leave the device - server handles ZK proof generation and heavy computation.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "url": "https://api.privatelysend.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.privatelysend.com",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Tokens",
+      "description": "Token information"
+    },
+    {
+      "name": "Balance",
+      "description": "Shielded balance queries"
+    },
+    {
+      "name": "Deposit",
+      "description": "Deposit SOL/tokens to Privacy Cash shield pool"
+    },
+    {
+      "name": "Withdraw",
+      "description": "Withdraw SOL/tokens from Privacy Cash shield pool"
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Check API health and network status",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "network": {
+                      "type": "string",
+                      "enum": ["mainnet", "devnet"],
+                      "example": "mainnet"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tokens": {
+      "get": {
+        "tags": ["Tokens"],
+        "summary": "List supported tokens",
+        "description": "Get list of all supported tokens (SOL, USDC, USDT, etc.)",
+        "responses": {
+          "200": {
+            "description": "List of supported tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tokens": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "example": "SOL"
+                          },
+                          "mint": {
+                            "type": "string",
+                            "description": "Token mint address",
+                            "example": "So11111111111111111111111111111111111111112"
+                          },
+                          "decimals": {
+                            "type": "number",
+                            "example": 9
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/balance": {
+      "post": {
+        "tags": ["Balance"],
+        "summary": "Get shielded balance",
+        "description": "Get shielded balance for a specific token (defaults to SOL)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicKey", "signature"],
+                "properties": {
+                  "publicKey": {
+                    "type": "string",
+                    "description": "User's Solana public key (base58)",
+                    "example": "6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Base64-encoded signature of auth message",
+                    "example": "base64_signature_here"
+                  },
+                  "mint": {
+                    "type": "string",
+                    "description": "Optional: Token mint address (defaults to SOL)",
+                    "example": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Shielded balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "number",
+                      "description": "Shielded balance in token units",
+                      "example": 0.011
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "SOL"
+                    },
+                    "lamports": {
+                      "type": "number",
+                      "description": "Balance in lamports",
+                      "example": 11000000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/balance/all": {
+      "post": {
+        "tags": ["Balance"],
+        "summary": "Get all shielded balances",
+        "description": "Get shielded balances for all supported tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicKey", "signature"],
+                "properties": {
+                  "publicKey": {
+                    "type": "string",
+                    "description": "User's Solana public key (base58)",
+                    "example": "6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Base64-encoded signature of auth message",
+                    "example": "base64_signature_here"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All shielded balances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balances": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "token": {
+                            "type": "string",
+                            "example": "SOL"
+                          },
+                          "balance": {
+                            "type": "number",
+                            "example": 0.011
+                          },
+                          "lamports": {
+                            "type": "number",
+                            "example": 11000000
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/deposit/prepare": {
+      "post": {
+        "tags": ["Deposit"],
+        "summary": "Prepare deposit transaction",
+        "description": "Generate unsigned transaction and ZK proof for deposit. Client signs locally and submits via /v1/deposit/submit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicKey", "signature", "amount"],
+                "properties": {
+                  "publicKey": {
+                    "type": "string",
+                    "description": "User's Solana public key (base58)",
+                    "example": "6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Base64-encoded signature of auth message",
+                    "example": "base64_signature_here"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "Amount to deposit in token units (e.g., 0.01 for 0.01 SOL)",
+                    "example": 0.01
+                  },
+                  "mint": {
+                    "type": "string",
+                    "description": "Optional: Token mint address (defaults to SOL)",
+                    "example": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unsigned transaction ready for signing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "unsignedTransaction": {
+                      "type": "string",
+                      "description": "Base64-encoded unsigned VersionedTransaction",
+                      "example": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAED..."
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "number",
+                          "description": "Deposit amount in lamports",
+                          "example": 10000000
+                        },
+                        "encryptedOutput1": {
+                          "type": "string",
+                          "description": "Hex-encoded encrypted UTXO output 1",
+                          "example": "0000000000000002..."
+                        },
+                        "encryptedOutput2": {
+                          "type": "string",
+                          "description": "Hex-encoded encrypted UTXO output 2",
+                          "example": "0000000000000002..."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/deposit/submit": {
+      "post": {
+        "tags": ["Deposit"],
+        "summary": "Submit signed deposit transaction",
+        "description": "Submit client-signed deposit transaction to Privacy Cash relayer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["signedTransaction", "senderAddress", "encryptedOutput1"],
+                "properties": {
+                  "signedTransaction": {
+                    "type": "string",
+                    "description": "Base64-encoded signed VersionedTransaction",
+                    "example": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAED..."
+                  },
+                  "senderAddress": {
+                    "type": "string",
+                    "description": "Sender's Solana public key (base58)",
+                    "example": "6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7"
+                  },
+                  "encryptedOutput1": {
+                    "type": "string",
+                    "description": "Hex-encoded encrypted UTXO output 1 (from prepare response)",
+                    "example": "0000000000000002..."
+                  },
+                  "referrer": {
+                    "type": "string",
+                    "description": "Optional: Referrer address for rewards",
+                    "example": "ReferrerPublicKey..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signature": {
+                      "type": "string",
+                      "description": "Transaction signature",
+                      "example": "5QQE4L8RwV3wYCV3KeYnnELuK4bMnAnkvTETiH6PKqDADxfR7TLvgXZCyWPNgv5coZ3cWCJQp3GyQ5meRPDMcfDz"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transaction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/withdraw/prepare": {
+      "post": {
+        "tags": ["Withdraw"],
+        "summary": "Prepare withdrawal",
+        "description": "Generate ZK proof and withdrawal parameters. Server handles proof generation - client submits via /v1/withdraw/submit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicKey", "signature", "amount", "recipientAddress"],
+                "properties": {
+                  "publicKey": {
+                    "type": "string",
+                    "description": "User's Solana public key (base58)",
+                    "example": "6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Base64-encoded signature of auth message",
+                    "example": "base64_signature_here"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "Amount to withdraw in token units (e.g., 0.01 for 0.01 SOL)",
+                    "example": 0.01
+                  },
+                  "recipientAddress": {
+                    "type": "string",
+                    "description": "Recipient Solana public key (base58)",
+                    "example": "GG2Kkkcef9UZXvnJTKP7Q6QRtS8he3FezKHuQP67Ct2r"
+                  },
+                  "mint": {
+                    "type": "string",
+                    "description": "Optional: Token mint address (defaults to SOL)",
+                    "example": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal prepared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "withdrawParams": {
+                      "type": "object",
+                      "description": "Withdrawal parameters to submit to relayer",
+                      "properties": {
+                        "proofA": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "ZK proof component A"
+                        },
+                        "proofB": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "description": "ZK proof component B"
+                        },
+                        "proofC": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "ZK proof component C"
+                        },
+                        "root": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Merkle tree root"
+                        },
+                        "publicAmount": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Public amount (negative for withdrawal)"
+                        },
+                        "extDataHash": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "External data hash"
+                        },
+                        "inputNullifier": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "description": "Input nullifiers"
+                        },
+                        "outputCommitment": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "description": "Output commitments"
+                        },
+                        "encryptedOutput1": {
+                          "type": "string",
+                          "description": "Hex-encoded encrypted UTXO output 1"
+                        },
+                        "encryptedOutput2": {
+                          "type": "string",
+                          "description": "Hex-encoded encrypted UTXO output 2"
+                        }
+                      }
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "number",
+                          "description": "Withdrawal amount in lamports",
+                          "example": 10000000
+                        },
+                        "fee": {
+                          "type": "number",
+                          "description": "Privacy Cash fee in lamports",
+                          "example": 6035000
+                        },
+                        "recipient": {
+                          "type": "string",
+                          "example": "GG2Kkkcef9UZXvnJTKP7Q6QRtS8he3FezKHuQP67Ct2r"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or insufficient balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/withdraw/submit": {
+      "post": {
+        "tags": ["Withdraw"],
+        "summary": "Submit withdrawal",
+        "description": "Submit withdrawal parameters to Privacy Cash relayer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["withdrawParams"],
+                "properties": {
+                  "withdrawParams": {
+                    "type": "object",
+                    "description": "Withdrawal parameters from /v1/withdraw/prepare",
+                    "properties": {
+                      "proofA": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "proofB": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          }
+                        }
+                      },
+                      "proofC": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "root": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "publicAmount": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "extDataHash": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "inputNullifier": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          }
+                        }
+                      },
+                      "outputCommitment": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          }
+                        }
+                      },
+                      "encryptedOutput1": {
+                        "type": "string"
+                      },
+                      "encryptedOutput2": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signature": {
+                      "type": "string",
+                      "description": "Transaction signature",
+                      "example": "2bjSU4PE6BUXQ6qfxdYA1zGmziXKRNxkz8MpGLe5Qzbr168aer3AK8RH9CHqavhUC7CQ55wAaCTx3qxkzKFgZrNu"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid withdrawal parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Insufficient balance"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SignatureAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Signature",
+        "description": "Base64-encoded signature of auth message. Message: 'Privacy Money account sign in'"
+      }
+    }
+  },
+  "security": [
+    {
+      "SignatureAuth": []
+    }
+  ]
+}
