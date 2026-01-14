@@ -16,6 +16,8 @@
     "sdk:balance": "tsx scripts/sdk-balance.ts",
     "sdk:deposit": "tsx scripts/sdk-deposit.ts",
     "sdk:withdraw": "tsx scripts/sdk-withdraw.ts",
+    "transfer:max": "tsx scripts/transfer-max.ts",
+    "deposit:withdraw:max": "tsx scripts/deposit-withdraw-max.ts",
     "e2e:full": "tsx scripts/e2e-full-test.ts",
     "test:sol-ore": "tsx scripts/test-sol-ore.ts"
   },
