@@ -2,7 +2,7 @@
 
 A simple API server for Privacy Cash - enabling private transactions on Solana. **Your private keys never leave your device.**
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/HDB5kQ?referralCode=2CZkeQ&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/imeqI2?referralCode=2CZkeQ&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## What is this?
 
