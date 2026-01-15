@@ -46,12 +46,32 @@ router.post('/prepare', async (req: Request, res: Response) => {
       });
     }
 
-    logger.debug('Deposit prepared');
+    // Handle both SOL (with fees) and SPL deposits
+    const metadata = result.metadata as any;
+    const hasFee = 'fee' in metadata;
+    
+    logger.debug('Deposit prepared', { 
+      amount: metadata.amount,
+      fee: hasFee ? metadata.fee : 0,
+      amountAfterFee: hasFee ? metadata.amountAfterFee : metadata.amount
+    });
+
+    const responseMetadata: any = {
+      amount: metadata.amount,
+      encryptedOutput1: metadata.encryptedOutput1,
+      encryptedOutput2: metadata.encryptedOutput2,
+    };
+
+    if (hasFee) {
+      responseMetadata.fee = metadata.fee;
+      responseMetadata.feeRate = metadata.feeRate;
+      responseMetadata.amountAfterFee = metadata.amountAfterFee;
+    }
 
     res.json({
       success: true,
       unsignedTransaction: result.unsignedTransaction,
-      metadata: result.metadata,
+      metadata: responseMetadata,
     });
   } catch (error: any) {
     logger.error('Deposit prepare failed', { 

@@ -11,6 +11,7 @@
     "test:health": "tsx scripts/test-health.ts",
     "test:api-full": "tsx scripts/test-api-full.ts",
     "test:api": "tsx scripts/test-api.ts",
+    "test:deposit-fee": "tsx scripts/test-deposit-fee.ts",
     "validate": "tsx scripts/validate-setup.ts",
     "sdk:test": "tsx scripts/sdk-test.ts",
     "sdk:balance": "tsx scripts/sdk-balance.ts",

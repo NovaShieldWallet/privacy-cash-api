@@ -11,11 +11,8 @@
 - Supported tokens: SOL, USDC, USDT, ZEC, ORE, STORE
 
 ### Test Wallet
-- **Address**: `6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7`
-- **Current Status**:
-  - Regular SOL: ~0.010 SOL
-  - Shielded SOL: ~0.011 SOL
-  - Has USDC, USDT, ORE on mainnet
+- Test wallet address removed for security
+- Use your own test wallet for development
 
 ### Verified Working
 1. ✅ SDK integration - connects to mainnet Privacy Cash
@@ -56,9 +53,7 @@ npm run test:api        # Test all API endpoints
 
 To run full mainnet tests, the wallet needs:
 - **Minimum 0.02 SOL** for deposit+withdraw tests
-- Currently has: 0.010 SOL (need +0.01 more)
-
-Send SOL to: `6956ZXBBTm55xLrhRXGug5zNnain6xP7ThhzvfRmZeC7`
+- Configure your test wallet in `.env` file
 
 Then you can:
 1. `npm run sdk:deposit 0.005` - deposit to shield pool

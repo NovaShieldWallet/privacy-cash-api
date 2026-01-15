@@ -1,4 +1,4 @@
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, SystemProgram } from '@solana/web3.js';
 import BN from 'bn.js';
 import { WasmFactory } from '@lightprotocol/hasher.rs';
 import { keccak256 } from '@ethersproject/keccak256';
@@ -54,6 +54,9 @@ export class PrivacyCashService {
     unsignedTransaction: string;
     metadata: {
       amount: number;
+      fee: number;
+      feeRate: number;
+      amountAfterFee: number;
       encryptedOutput1: string;
       encryptedOutput2: string;
     };
@@ -82,7 +85,23 @@ export class PrivacyCashService {
     const utxoPrivateKey = encryptionService.getUtxoPrivateKeyV2();
     const utxoKeypair = new UtxoKeypair(utxoPrivateKey, lightWasm);
 
-    const feeAmount = 0; // Deposits have no fee
+    // Calculate 1% deposit fee (minimum 0.001 SOL or 1,000,000 lamports)
+    const DEPOSIT_FEE_RATE = 0.01; // 1%
+    const MINIMUM_DEPOSIT_FEE = 1_000_000; // 0.001 SOL
+    const MINIMUM_DEPOSIT_AMOUNT = 20_000_000; // 0.02 SOL minimum deposit (required for transaction to work)
+    const calculatedFee = Math.floor(lamports * DEPOSIT_FEE_RATE);
+    const feeAmount = Math.max(calculatedFee, MINIMUM_DEPOSIT_FEE);
+    
+    // Check minimum deposit requirement
+    if (lamports < MINIMUM_DEPOSIT_AMOUNT) {
+      throw new Error(`Deposit amount too low. Minimum required: ${MINIMUM_DEPOSIT_AMOUNT / LAMPORTS_PER_SOL} SOL`);
+    }
+    
+    // Ensure deposit amount is sufficient after fee
+    if (lamports < feeAmount) {
+      throw new Error(`Deposit amount too low. Minimum required: ${feeAmount / LAMPORTS_PER_SOL} SOL (includes ${feeAmount / LAMPORTS_PER_SOL} SOL fee)`);
+    }
+    
     let extAmount = lamports;
     let outputAmount: string;
     let inputs: Utxo[];
@@ -90,8 +109,8 @@ export class PrivacyCashService {
     let inputMerklePathElements: string[][];
 
     if (existingUtxos.length === 0) {
-      // Fresh deposit
-      outputAmount = new BN(lamports).sub(new BN(feeAmount)).toString();
+      // Fresh deposit - full amount goes to shielded pool (fee is separate transfer)
+      outputAmount = new BN(lamports).toString();
       const solMintShort = '11111111111111111111111111111112';
       inputs = [
         new Utxo({ lightWasm, keypair: utxoKeypair, mintAddress: solMintShort }),
@@ -107,7 +126,8 @@ export class PrivacyCashService {
         : new Utxo({ lightWasm, keypair: utxoKeypair, amount: '0', mintAddress: '11111111111111111111111111111112' });
 
       const totalExisting = firstUtxo.amount.add(secondUtxo.amount);
-      outputAmount = totalExisting.add(new BN(lamports)).sub(new BN(feeAmount)).toString();
+      // Full deposit amount goes to shielded pool (fee is separate transfer)
+      outputAmount = totalExisting.add(new BN(lamports)).toString();
 
       inputs = [firstUtxo, secondUtxo];
 
@@ -207,18 +227,23 @@ export class PrivacyCashService {
       outputCommitments: [inputsInBytes[5], inputsInBytes[6]],
     };
 
-    // Build unsigned transaction
+    // Build unsigned transaction with fee transfer
     const { transaction } = await buildUnsignedDepositTransaction({
       connection: this.connection,
       signer,
       proof: proofToSubmit,
       extData,
+      depositFee: feeAmount,
+      feeRecipient: new PublicKey(config.adminReferralWallet),
     });
 
     return {
       unsignedTransaction: serializeTransaction(transaction),
       metadata: {
         amount: lamports,
+        fee: feeAmount,
+        feeRate: DEPOSIT_FEE_RATE,
+        amountAfterFee: lamports - feeAmount,
         encryptedOutput1: encryptedOutput1.toString('hex'),
         encryptedOutput2: encryptedOutput2.toString('hex'),
       },

@@ -118,14 +118,17 @@ export function serializeProofAndExtData(proof: ProofData, extData: ExtData, isS
 /**
  * Build an unsigned SOL deposit transaction
  * The client will sign this locally
+ * Includes fee transfer instruction if depositFee is provided
  */
 export async function buildUnsignedDepositTransaction(params: {
   connection: Connection;
   signer: PublicKey;
   proof: ProofData;
   extData: ExtData;
+  depositFee?: number; // Fee in lamports to charge on deposit
+  feeRecipient?: PublicKey; // Wallet to receive the deposit fee
 }): Promise<{ transaction: VersionedTransaction; serializedProof: Buffer }> {
-  const { connection, signer, proof, extData } = params;
+  const { connection, signer, proof, extData, depositFee, feeRecipient } = params;
 
   const { treeAccount, treeTokenAccount, globalConfigAccount } = getProgramAccounts();
   const { nullifier0PDA, nullifier1PDA } = findNullifierPDAs(proof);
@@ -156,6 +159,23 @@ export async function buildUnsignedDepositTransaction(params: {
 
   const computeUnits = ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 });
 
+  // Build instructions array
+  const instructions = [computeUnits, depositInstruction];
+
+  // Add fee transfer instruction if deposit fee is specified
+  if (depositFee && depositFee > 0 && feeRecipient) {
+    const feeTransferInstruction = SystemProgram.transfer({
+      fromPubkey: signer,
+      toPubkey: feeRecipient,
+      lamports: depositFee,
+    });
+    instructions.push(feeTransferInstruction);
+    logger.debug('Added deposit fee transfer', { 
+      fee: depositFee, 
+      recipient: feeRecipient.toBase58() 
+    });
+  }
+
   // Fetch ALT
   const lookupTableAccount = await connection.getAddressLookupTable(config.altAddress);
   if (!lookupTableAccount.value) {
@@ -167,7 +187,7 @@ export async function buildUnsignedDepositTransaction(params: {
   const messageV0 = new TransactionMessage({
     payerKey: signer,
     recentBlockhash: recentBlockhash.blockhash,
-    instructions: [computeUnits, depositInstruction],
+    instructions,
   }).compileToV0Message([lookupTableAccount.value]);
 
   const transaction = new VersionedTransaction(messageV0);
