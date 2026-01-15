@@ -94,8 +94,8 @@ class Config {
   }
 
   get shouldLog(): boolean {
-    // Enable logging in development, minimal in production
-    return process.env.NODE_ENV !== 'production';
+    // Always enable logging for debugging failures and general operations
+    return true;
   }
 
   getToken(symbol: string): TokenConfig | undefined {

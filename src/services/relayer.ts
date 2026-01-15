@@ -37,7 +37,14 @@ export async function queryTreeState(tokenName?: string): Promise<TreeState> {
     const response = await fetch(url);
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to query tree state: ${response.status} - ${errorText.substring(0, 100)}`);
+      const error = new Error(`Failed to query tree state: ${response.status} - ${errorText.substring(0, 100)}`);
+      logger.error('Failed to query tree state', { 
+        url, 
+        status: response.status, 
+        errorText: errorText.substring(0, 200),
+        network: config.network 
+      });
+      throw error;
     }
 
     const data = await response.json() as TreeState;
@@ -45,6 +52,7 @@ export async function queryTreeState(tokenName?: string): Promise<TreeState> {
 
     return data;
   } catch (error: any) {
+    logger.error('Tree state query error', { url, error: error.message, stack: error.stack });
     throw error;
   }
 }
@@ -61,13 +69,24 @@ export async function fetchMerkleProof(commitment: string, tokenName?: string): 
 
   logger.debug('Fetching merkle proof', { commitment, url });
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to fetch merkle proof: ${response.status} - ${errorText.substring(0, 100)}`);
-  }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Failed to fetch merkle proof', { 
+        commitment, 
+        url, 
+        status: response.status, 
+        errorText: errorText.substring(0, 200) 
+      });
+      throw new Error(`Failed to fetch merkle proof: ${response.status} - ${errorText.substring(0, 100)}`);
+    }
 
-  return response.json() as Promise<MerkleProof>;
+    return response.json() as Promise<MerkleProof>;
+  } catch (error: any) {
+    logger.error('Merkle proof fetch error', { commitment, url, error: error.message, stack: error.stack });
+    throw error;
+  }
 }
 
 /**
@@ -122,10 +141,19 @@ export async function relayDeposit(params: {
 
   if (!response.ok) {
     const errorText = await response.text();
+    logger.error('Deposit relay failed', { 
+      url, 
+      status: response.status, 
+      errorText: errorText.substring(0, 500),
+      senderAddress: params.senderAddress,
+      mintAddress: params.mintAddress
+    });
     throw new Error(`Deposit relay failed: ${errorText}`);
   }
 
-  return response.json() as Promise<{ signature: string; success: boolean }>;
+  const result = await response.json() as { signature: string; success: boolean };
+  logger.info('Deposit relayed successfully', { signature: result.signature });
+  return result;
 }
 
 /**
@@ -170,10 +198,19 @@ export async function submitWithdraw(params: {
 
   if (!response.ok) {
     const errorData = await response.json() as { error?: string };
+    logger.error('Withdrawal submission failed', { 
+      url, 
+      status: response.status, 
+      error: errorData.error,
+      recipient: params.recipient,
+      mintAddress: params.mintAddress
+    });
     throw new Error(errorData.error || `Withdraw failed: ${response.status}`);
   }
 
-  return response.json() as Promise<{ signature: string; success: boolean }>;
+  const result = await response.json() as { signature: string; success: boolean };
+  logger.info('Withdrawal submitted successfully', { signature: result.signature });
+  return result;
 }
 
 /**

@@ -51,7 +51,11 @@ router.post('/prepare', async (req: Request, res: Response) => {
       metadata: result.metadata,
     });
   } catch (error: any) {
-    logger.error('Withdraw prepare failed', { error: error.message });
+    logger.error('Withdraw prepare failed', { 
+      error: error.message,
+      stack: error.stack,
+      requestBody: { publicKey: req.body.publicKey, amount: req.body.amount, recipientAddress: req.body.recipientAddress }
+    });
     res.status(500).json({ error: error.message });
   }
 });
@@ -88,7 +92,11 @@ router.post('/submit', async (req: Request, res: Response) => {
       signature: result.signature,
     });
   } catch (error: any) {
-    logger.error('Withdraw submit failed', { error: error.message });
+    logger.error('Withdraw submit failed', { 
+      error: error.message,
+      stack: error.stack,
+      requestBody: { mintAddress: req.body.mintAddress }
+    });
     res.status(500).json({ error: error.message });
   }
 });

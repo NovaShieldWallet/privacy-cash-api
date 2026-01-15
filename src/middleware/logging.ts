@@ -25,9 +25,8 @@ class Logger {
   }
 
   error(message: string, meta?: Record<string, unknown>): void {
-    // Always log errors, but sanitize in production
-    const safeMeta = config.isProduction ? undefined : meta;
-    console.error(`[ERROR] ${message}`, safeMeta ? JSON.stringify(safeMeta) : '');
+    // Always log errors with full details for debugging
+    console.error(`[ERROR] ${message}`, meta ? JSON.stringify(meta, null, 2) : '');
   }
 }
 
@@ -44,13 +43,20 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   next();
 }
 
-// Error logging
+// Error logging - always log full error details
 export function errorLogger(
   err: Error,
   req: Request,
   res: Response,
   next: NextFunction
 ): void {
-  logger.error(err.message, config.shouldLog ? { stack: err.stack, path: req.path } : undefined);
+  logger.error(err.message, { 
+    stack: err.stack, 
+    path: req.path,
+    method: req.method,
+    body: req.body,
+    query: req.query,
+    headers: req.headers
+  });
   next(err);
 }

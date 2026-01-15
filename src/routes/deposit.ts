@@ -54,7 +54,11 @@ router.post('/prepare', async (req: Request, res: Response) => {
       metadata: result.metadata,
     });
   } catch (error: any) {
-    logger.error('Deposit prepare failed', { error: error.message, stack: error.stack });
+    logger.error('Deposit prepare failed', { 
+      error: error.message, 
+      stack: error.stack,
+      requestBody: { publicKey: req.body.publicKey, amount: req.body.amount, mintAddress: req.body.mintAddress }
+    });
     res.status(500).json({ error: error.message || 'Unknown error' });
   }
 });
@@ -91,7 +95,11 @@ router.post('/submit', async (req: Request, res: Response) => {
       signature: result.signature,
     });
   } catch (error: any) {
-    logger.error('Deposit submit failed', { error: error.message });
+    logger.error('Deposit submit failed', { 
+      error: error.message,
+      stack: error.stack,
+      requestBody: { senderAddress: req.body.senderAddress, mintAddress: req.body.mintAddress }
+    });
     res.status(500).json({ error: error.message });
   }
 });

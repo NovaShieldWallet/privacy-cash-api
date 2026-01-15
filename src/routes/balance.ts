@@ -34,7 +34,11 @@ router.post('/', async (req: Request, res: Response) => {
       decimals: result.decimals,
     });
   } catch (error: any) {
-    logger.error('Balance retrieval failed', { error: error.message });
+    logger.error('Balance retrieval failed', { 
+      error: error.message,
+      stack: error.stack,
+      requestBody: { publicKey: req.body.publicKey, mintAddress: req.body.mintAddress }
+    });
     res.status(500).json({ error: error.message });
   }
 });
@@ -83,7 +87,11 @@ router.post('/all', async (req: Request, res: Response) => {
 
     res.json({ success: true, balances });
   } catch (error: any) {
-    logger.error('Balance retrieval failed', { error: error.message });
+    logger.error('Balance retrieval (all) failed', { 
+      error: error.message,
+      stack: error.stack,
+      requestBody: { publicKey: req.body.publicKey }
+    });
     res.status(500).json({ error: error.message });
   }
 });
