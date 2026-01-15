@@ -10,17 +10,8 @@
     "dev": "tsx watch src/server.ts",
     "test:health": "tsx scripts/test-health.ts",
     "test:api-full": "tsx scripts/test-api-full.ts",
-    "test:api": "tsx scripts/test-api.ts",
     "test:deposit-fee": "tsx scripts/test-deposit-fee.ts",
-    "validate": "tsx scripts/validate-setup.ts",
-    "sdk:test": "tsx scripts/sdk-test.ts",
-    "sdk:balance": "tsx scripts/sdk-balance.ts",
-    "sdk:deposit": "tsx scripts/sdk-deposit.ts",
-    "sdk:withdraw": "tsx scripts/sdk-withdraw.ts",
-    "transfer:max": "tsx scripts/transfer-max.ts",
-    "deposit:withdraw:max": "tsx scripts/deposit-withdraw-max.ts",
-    "e2e:full": "tsx scripts/e2e-full-test.ts",
-    "test:sol-ore": "tsx scripts/test-sol-ore.ts"
+    "validate": "tsx scripts/validate-setup.ts"
   },
   "dependencies": {
     "@lightprotocol/hasher.rs": "^0.2.1",

@@ -1,164 +1,175 @@
-# Nova Privacy Cash API
+# Nova Privacy Cash API Server
 
-Secure HTTPS API wrapper for Privacy Cash SDK. **Private keys never leave the client device.**
+A simple API server for Privacy Cash - enabling private transactions on Solana. **Your private keys never leave your device.**
 
-## Security Model
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/HDB5kQ?referralCode=2CZkeQ&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   iOS Client    │────▶│   Nova API      │────▶│  Privacy Cash   │
-│                 │     │   Server        │     │    Relayer      │
-│ • Holds PK      │     │ • Public key    │     │                 │
-│ • Signs locally │     │ • ZK proofs     │     │                 │
-│ • Never exposes │     │ • No keys!      │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+## What is this?
+
+This is a **server** that helps your app (iOS, web, etc.) interact with Privacy Cash. It handles the complex stuff (ZK proofs, transactions) so your app doesn't have to.
+
+**Important:** Your users' private keys stay on their devices. The server never sees them.
 
 ## Quick Start
 
-```bash
-# Install dependencies
-npm install
+### Option 1: Deploy to Railway (Easiest)
 
-# Copy environment config
-cp env.example .env
+Click the "Deploy on Railway" button above. Railway will:
+- Set up the server automatically
+- Ask you for your Solana RPC URL
+- Deploy in seconds
 
-# Start development server
-npm run dev
+### Option 2: Run Locally
 
-# Run health checks
-npm run test:health
-```
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment:**
+   ```bash
+   cp env.example .env
+   ```
+   
+   Then edit `.env` and add your Solana mainnet RPC URL:
+   ```
+   MAINNET_RPC_URL=https://your-rpc-url-here
+   ```
+   
+   Get a free RPC from:
+   - [Helius](https://www.helius.dev/)
+   - [QuickNode](https://www.quicknode.com/)
+
+3. **Start the server:**
+   ```bash
+   npm run dev
+   ```
+
+   Server runs on `http://localhost:3000`
+
+4. **Test it:**
+   ```bash
+   npm run test:health
+   ```
 
 ## API Endpoints
 
-### Health & Info
-- `GET /v1/health` - Server health check
-- `GET /v1/tokens` - List supported tokens
+### Health Check
+```
+GET /v1/health
+```
+Check if server is running.
 
-### Deposits
-- `POST /v1/deposit/prepare` - Get unsigned transaction
-- `POST /v1/deposit/submit` - Submit signed transaction
+### Get Supported Tokens
+```
+GET /v1/tokens
+```
+List all supported tokens (SOL, USDC, USDT, etc.)
 
-### Withdrawals
-- `POST /v1/withdraw/prepare` - Generate ZK proof
-- `POST /v1/withdraw/submit` - Submit to relayer
+### Deposit (Shield Funds)
 
-### Balance
-- `POST /v1/balance` - Get shielded balance
-- `POST /v1/balance/all` - Get all token balances
-
-## iOS Client Flow
-
-### 1. Authentication
-Sign the message `"Privacy Money account sign in"` with the user's keypair:
-
-```swift
-let message = "Privacy Money account sign in".data(using: .utf8)!
-let signature = try keypair.sign(message: message)
-let signatureBase64 = signature.base64EncodedString()
+**Step 1: Prepare**
+```
+POST /v1/deposit/prepare
+Body: {
+  "publicKey": "your-wallet-address",
+  "signature": "base64-signature",
+  "amount": 1.0
+}
 ```
 
-### 2. Deposit Flow
-```swift
-// Step 1: Prepare deposit
-let prepareResponse = await api.post("/v1/deposit/prepare", body: [
-    "publicKey": publicKey,
-    "signature": signatureBase64,
-    "amount": 1.0  // SOL amount
-])
+**Step 2: Sign** (on your device with private key)
 
-// Step 2: Sign transaction locally
-let txData = Data(base64Encoded: prepareResponse.unsignedTransaction)!
-let transaction = try VersionedTransaction.deserialize(txData)
-try transaction.sign(keypair)
-let signedTx = transaction.serialize().base64EncodedString()
-
-// Step 3: Submit
-let submitResponse = await api.post("/v1/deposit/submit", body: [
-    "signedTransaction": signedTx,
-    "senderAddress": publicKey,
-    "encryptedOutput1": prepareResponse.metadata.encryptedOutput1
-])
+**Step 3: Submit**
+```
+POST /v1/deposit/submit
+Body: {
+  "signedTransaction": "base64-signed-tx",
+  "senderAddress": "your-wallet-address",
+  "encryptedOutput1": "..."
+}
 ```
 
-### 3. Withdrawal Flow
-```swift
-// Step 1: Prepare withdrawal (server generates ZK proof)
-let prepareResponse = await api.post("/v1/withdraw/prepare", body: [
-    "publicKey": publicKey,
-    "signature": signatureBase64,
-    "amount": 0.5,  // SOL amount
-    "recipientAddress": recipientPublicKey
-])
+### Withdraw (Unshield Funds)
 
-// Step 2: Submit (no client signing needed)
-let submitResponse = await api.post("/v1/withdraw/submit", body: [
-    "withdrawParams": prepareResponse.withdrawParams
-])
+**Step 1: Prepare**
+```
+POST /v1/withdraw/prepare
+Body: {
+  "publicKey": "your-wallet-address",
+  "signature": "base64-signature",
+  "amount": 0.5,
+  "recipientAddress": "recipient-address"
+}
 ```
 
-### 4. Check Balance
-```swift
-let balanceResponse = await api.post("/v1/balance", body: [
-    "publicKey": publicKey,
-    "signature": signatureBase64,
-    "mintAddress": nil  // nil for SOL, or token mint for SPL
-])
-// balanceResponse.balance = 1.5 (in token units)
+**Step 2: Submit**
+```
+POST /v1/withdraw/submit
+Body: {
+  "withdrawParams": {...}
+}
 ```
 
-## ⚠️ Mainnet Only
+### Check Balance
+```
+POST /v1/balance
+Body: {
+  "publicKey": "your-wallet-address",
+  "signature": "base64-signature"
+}
+```
 
-**Privacy Cash only supports mainnet.** This API is configured for mainnet-only operation. All devnet/testnet functionality has been removed.
+## Authentication
 
-## Environment Variables
+All endpoints (except `/v1/health` and `/v1/tokens`) require authentication:
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `MAINNET_RPC_URL` | Solana mainnet RPC endpoint (from Helius, QuickNode, etc.) | ✅ Yes |
-| `NODE_ENV` | Environment (development/production) - affects logging only | No |
-| `API_URL` | API server URL for test scripts (default: http://localhost:3000) | No |
+1. Sign the message: `"Privacy Money account sign in"`
+2. Send the base64-encoded signature in the request body
+
+**Example (JavaScript):**
+```javascript
+const message = "Privacy Money account sign in";
+const signature = await wallet.signMessage(new TextEncoder().encode(message));
+const signatureBase64 = Buffer.from(signature).toString('base64');
+```
+
+## Deposit Fees
+
+- **Fee:** 1% of deposit amount
+- **Minimum fee:** 0.001 SOL
+- **Minimum deposit:** 0.02 SOL
+
+Fees are automatically included in the deposit transaction and sent to the admin wallet.
 
 ## Supported Tokens
 
-- SOL (native)
+- SOL (native Solana)
 - USDC
 - USDT
 - ZEC
 - ORE
 - STORE
 
-## Logging
+## Environment Variables
 
-**Development**: Full debug logging including request details and timing.
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MAINNET_RPC_URL` | Your Solana mainnet RPC endpoint | ✅ Yes |
+| `NODE_ENV` | Set to `production` for production | No |
 
-**Production**: Minimal logging - errors only, no sensitive data (public keys, amounts, transactions are never logged).
+## Security
 
-## Testing
+- ✅ Private keys never touch the server
+- ✅ All signing happens on client devices
+- ✅ Server only generates unsigned transactions
+- ✅ Mainnet-only (most secure)
 
-```bash
-# Health check
-npm run test:health
+## API Documentation
 
-# Full API test (tests all endpoints)
-npm run test:api-full
+Full API specification: `openapi.json` (OpenAPI 3.0 format)
 
-# Note: For actual wallet operations, use the SDK scripts:
-# npm run sdk:balance
-# npm run sdk:deposit 0.01
-# npm run sdk:withdraw 0.005
-```
-
-**⚠️ WARNING**: All tests use REAL SOL on mainnet. Make sure you have a funded wallet configured.
-
-## Security Notes
-
-1. **Private keys never touch the server** - All signing happens on iOS/client
-2. **Signature-based encryption** - UTXO decryption requires client signature
-3. **Production logging** - Sensitive data is never logged
-4. **Mainnet-only** - Privacy Cash only supports mainnet; devnet removed for security
-5. **No sensitive data in code** - Private keys must be provided via environment variables
+Import into Postman, Insomnia, or generate client code.
 
 ## License
 
