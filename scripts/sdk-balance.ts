@@ -37,18 +37,18 @@ async function main() {
   console.log(`💰 SOL: ${solBalance / LAMPORTS_PER_SOL} SOL`);
 
   // Shielded balance
-  const client = new PrivacyCash({
-    RPC_url: rpcUrl,
-    // Pass raw secret key bytes so SDK can construct its own Keypair
-    owner: getOwnerSecretArray(),
-    enableDebug: false,
-  });
+    const client = new PrivacyCash({
+      RPC_url: rpcUrl,
+      // Pass raw secret key bytes so SDK can construct its own Keypair
+      owner: getOwnerSecretArray(),
+      enableDebug: false,
+    });
 
-  try {
-    const shielded = await client.getPrivateBalance();
-    console.log(`🔒 Shielded SOL: ${shielded.lamports / LAMPORTS_PER_SOL} SOL`);
-  } catch (err: any) {
-    console.log(`🔒 Shielded SOL: 0 SOL (${err.message})`);
+    try {
+      const shielded = await client.getPrivateBalance();
+      console.log(`🔒 Shielded SOL: ${shielded.lamports / LAMPORTS_PER_SOL} SOL`);
+    } catch (err: any) {
+      console.log(`🔒 Shielded SOL: 0 SOL (${err.message})`);
   }
 
   console.log('');

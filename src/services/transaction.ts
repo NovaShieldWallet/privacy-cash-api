@@ -69,16 +69,19 @@ export function findNullifierPDAs(proof: ProofData) {
 
 /**
  * Find cross-check nullifier PDAs
+ * Must match SDK reference implementation exactly
  */
 export function findCrossCheckNullifierPDAs(proof: ProofData) {
   const programId = config.programId;
 
+  // nullifier2 uses nullifier0 seed with inputNullifiers[1]
   const [nullifier2PDA] = PublicKey.findProgramAddressSync(
-    [Buffer.from('nullifier1'), Buffer.from(proof.inputNullifiers[0])],
+    [Buffer.from('nullifier0'), Buffer.from(proof.inputNullifiers[1])],
     programId
   );
+  // nullifier3 uses nullifier1 seed with inputNullifiers[0]
   const [nullifier3PDA] = PublicKey.findProgramAddressSync(
-    [Buffer.from('nullifier0'), Buffer.from(proof.inputNullifiers[1])],
+    [Buffer.from('nullifier1'), Buffer.from(proof.inputNullifiers[0])],
     programId
   );
 

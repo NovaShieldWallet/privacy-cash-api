@@ -72,7 +72,7 @@ async function main() {
   console.log('5️⃣  Testing POST /v1/deposit/prepare...');
   console.log('   ℹ️  Endpoint structure verified (requires wallet authentication)\n');
 
-  // Test: POST /v1/deposit/submit
+    // Test: POST /v1/deposit/submit
   console.log('6️⃣  Testing POST /v1/deposit/submit...');
   console.log('   ℹ️  Endpoint structure verified (requires signed transaction)\n');
 
