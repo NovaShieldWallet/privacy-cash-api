@@ -18,7 +18,7 @@ Nova Privacy Cash API provides private transactions on Solana using zero-knowled
 ## Base URL
 
 ```
-Production: https://your-api-domain.com/v1
+Production: https://api.privatelysend.com/v1
 ```
 
 ## Authentication

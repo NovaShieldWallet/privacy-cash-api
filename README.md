@@ -108,14 +108,17 @@ let balanceResponse = await api.post("/v1/balance", body: [
 // balanceResponse.balance = 1.5 (in token units)
 ```
 
+## ⚠️ Mainnet Only
+
+**Privacy Cash only supports mainnet.** This API is configured for mainnet-only operation. All devnet/testnet functionality has been removed.
+
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment (development/production) | development |
-| `NETWORK` | Solana network (mainnet/devnet/testnet) | devnet |
-| `PORT` | Server port | 3000 |
-| `LOG_LEVEL` | Logging level (debug/info/warn/error) | debug (dev), error (prod) |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MAINNET_RPC_URL` | Solana mainnet RPC endpoint (from Helius, QuickNode, etc.) | ✅ Yes |
+| `NODE_ENV` | Environment (development/production) - affects logging only | No |
+| `API_URL` | API server URL for test scripts (default: http://localhost:3000) | No |
 
 ## Supported Tokens
 
@@ -138,19 +141,24 @@ let balanceResponse = await api.post("/v1/balance", body: [
 # Health check
 npm run test:health
 
-# E2E deposit (requires funded devnet wallet)
-TEST_PRIVATE_KEY=<base58_key> npm run test:deposit
+# Full API test (tests all endpoints)
+npm run test:api-full
 
-# E2E withdraw (requires existing shielded balance)
-TEST_PRIVATE_KEY=<base58_key> npm run test:withdraw
+# Note: For actual wallet operations, use the SDK scripts:
+# npm run sdk:balance
+# npm run sdk:deposit 0.01
+# npm run sdk:withdraw 0.005
 ```
+
+**⚠️ WARNING**: All tests use REAL SOL on mainnet. Make sure you have a funded wallet configured.
 
 ## Security Notes
 
-1. **Private keys never touch the server** - All signing happens on iOS
+1. **Private keys never touch the server** - All signing happens on iOS/client
 2. **Signature-based encryption** - UTXO decryption requires client signature
 3. **Production logging** - Sensitive data is never logged
-4. **Rate limiting** - ZK proof endpoints have stricter limits
+4. **Mainnet-only** - Privacy Cash only supports mainnet; devnet removed for security
+5. **No sensitive data in code** - Private keys must be provided via environment variables
 
 ## License
 

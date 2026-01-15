@@ -27,16 +27,11 @@ async function main() {
   console.log(`\n💸 Withdraw ${AMOUNT} SOL from Privacy Cash (Mainnet)\n`);
 
   const keypair = getTestKeypair();
-  const isMainnet = process.env.NODE_ENV === 'production';
-  let rpcUrl = process.env.DEVNET_RPC_URL || 'https://api.devnet.solana.com';
   
-  if (isMainnet) {
-    rpcUrl = process.env.MAINNET_RPC_URL;
-    if (!rpcUrl) throw new Error('MAINNET_RPC_URL required for mainnet');
-  }
-  
-  if (!isMainnet) {
-    console.log('⚠️  Privacy Cash only works on mainnet - this will fail at relayer\n');
+  // Mainnet only - Privacy Cash only supports mainnet
+  const rpcUrl = process.env.MAINNET_RPC_URL;
+  if (!rpcUrl) {
+    throw new Error('MAINNET_RPC_URL is required. Privacy Cash only supports mainnet.');
   }
 
   const recipient = RECIPIENT || keypair.publicKey.toBase58();

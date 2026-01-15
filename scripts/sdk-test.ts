@@ -28,18 +28,10 @@ async function main() {
   const keypair = getTestKeypair();
   console.log(`\n📍 Wallet: ${keypair.publicKey.toBase58()}`);
 
-  // Use devnet for testing
-  const isMainnet = process.env.NODE_ENV === 'production';
-  let rpcUrl = process.env.DEVNET_RPC_URL || 'https://api.devnet.solana.com';
-  
-  if (isMainnet) {
-    rpcUrl = process.env.MAINNET_RPC_URL;
-    if (!rpcUrl) throw new Error('MAINNET_RPC_URL required for mainnet');
-  }
-  
-  if (!isMainnet) {
-    console.log('⚠️  Note: Privacy Cash only works on mainnet');
-    console.log('   This test will fail at the relayer step\n');
+  // Mainnet only - Privacy Cash only supports mainnet
+  const rpcUrl = process.env.MAINNET_RPC_URL;
+  if (!rpcUrl) {
+    throw new Error('MAINNET_RPC_URL is required. Privacy Cash only supports mainnet.');
   }
 
   const connection = new Connection(rpcUrl, 'confirmed');

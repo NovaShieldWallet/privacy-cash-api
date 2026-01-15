@@ -37,9 +37,6 @@ export async function queryTreeState(tokenName?: string): Promise<TreeState> {
     const response = await fetch(url);
     if (!response.ok) {
       const errorText = await response.text();
-      if (config.network === 'devnet') {
-        throw new Error(`Privacy Cash relayer is mainnet-only. Got ${response.status} from ${url}. Error: ${errorText.substring(0, 100)}`);
-      }
       throw new Error(`Failed to query tree state: ${response.status} - ${errorText.substring(0, 100)}`);
     }
 
@@ -48,9 +45,6 @@ export async function queryTreeState(tokenName?: string): Promise<TreeState> {
 
     return data;
   } catch (error: any) {
-    if (config.network === 'devnet' && error.message.includes('fetch')) {
-      throw new Error(`Cannot reach Privacy Cash relayer (mainnet-only). Network: ${config.network}, URL: ${url}`);
-    }
     throw error;
   }
 }

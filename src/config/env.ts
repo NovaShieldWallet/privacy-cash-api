@@ -1,13 +1,13 @@
 import { PublicKey } from '@solana/web3.js';
 import 'dotenv/config';
 
-export type NetworkType = 'mainnet' | 'devnet';
+// Mainnet-only configuration - Privacy Cash only supports mainnet
+export type NetworkType = 'mainnet';
 
 // Hardcoded constants - these don't change
 const PROGRAM_ID = new PublicKey('9fhQBbumKEFuXtMBDw8AaQyAjCorLGJQiS3skWZdQyQD');
 const ALT_ADDRESS = new PublicKey('HEN49U2ySJ85Vc78qprSW9y6mFDhs1NczRxyppNHjofe');
 const RELAYER_URL = 'https://api3.privacycash.org';
-const DEVNET_RPC = 'https://api.devnet.solana.com';
 
 // Admin referral wallet - earns % fee on all transactions via Privacy Cash referral program
 const ADMIN_REFERRAL_WALLET = 'HKBrbp3h8B9tMCn4ceKCtmF8jWxvpfrb7YNLbCgxLUJL';
@@ -75,20 +75,16 @@ class Config {
   private tokens: Map<string, TokenConfig>;
 
   constructor() {
-    this.isProduction = process.env.NODE_ENV === 'production';
-    this.network = this.isProduction ? 'mainnet' : 'devnet';
+    // Mainnet-only: Privacy Cash only supports mainnet
+    this.isProduction = true;
+    this.network = 'mainnet';
     
-    // For devnet testing, use devnet RPC
-    if (this.isProduction) {
-      const mainnetRpc = process.env.MAINNET_RPC_URL;
-      if (!mainnetRpc) {
-        throw new Error('MAINNET_RPC_URL is required in production');
-      }
-      this.rpcUrl = mainnetRpc;
-    } else {
-      // Devnet for testing - use devnet RPC
-      this.rpcUrl = process.env.DEVNET_RPC_URL || DEVNET_RPC;
+    // Mainnet RPC is required
+    const mainnetRpc = process.env.MAINNET_RPC_URL;
+    if (!mainnetRpc) {
+      throw new Error('MAINNET_RPC_URL is required. Privacy Cash only supports mainnet.');
     }
+    this.rpcUrl = mainnetRpc;
 
     // Initialize tokens
     this.tokens = new Map();
@@ -98,7 +94,8 @@ class Config {
   }
 
   get shouldLog(): boolean {
-    return !this.isProduction;
+    // Enable logging in development, minimal in production
+    return process.env.NODE_ENV !== 'production';
   }
 
   getToken(symbol: string): TokenConfig | undefined {
