@@ -1,4 +1,4 @@
-# Nova Privacy Cash API Server
+# Privacy Cash API Server
 
 A simple API server for Privacy Cash - enabling private transactions on Solana. **Your private keys never leave your device.**
 
